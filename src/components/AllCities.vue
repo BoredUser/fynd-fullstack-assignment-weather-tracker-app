@@ -8,31 +8,22 @@
 <script>
 	import CitiesList from "@/components/CitiesList.vue";
 	import CityInput from "@/components/CityInput.vue";
+	import { mapState } from "vuex";
 
 	export default {
 		name: "AllCities",
 		data() {
 			return {
-				status: "LOADING",
-				cityNames: [],
+				status: "LOADING"
 			};
 		},
 		computed: {
-			cities() {
-				return this.$store.state.cities;
-			},
+			...mapState({
+				cities: (state) => state.cityReports.cities,
+				cityNames:(state) => state.cityReports.cityNames
+			})
 		},
 		methods: {
-			removeCityFromList(cityName) {
-				this.status = "LOADING";
-				this.cities = this.cities.filter((city) => {
-					return city.name.toLowerCase() !== cityName.toLowerCase();
-				});
-				this.cityNames = this.cityNames.filter((name) => {
-					return name.toLowerCase() !== cityName.toLowerCase();
-				});
-				this.status = "LOADED";
-			},
 			async getWeather() {
 				try {
 					await Promise.all(

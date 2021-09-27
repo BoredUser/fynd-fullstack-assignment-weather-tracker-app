@@ -5,6 +5,7 @@ const cityReports = {
 	state: {
 		token: "414c24b0ec0278856f10e110f3cdf2ae",
 		cities: [],
+		cityNames : []
 	},
 	getters: {
 		getCity(state) {
@@ -13,8 +14,7 @@ const cityReports = {
 					return value.name.toLowerCase() === cityName;
 				});
 				if (data !== undefined) {
-					const jData = JSON.parse(data);
-					return jData;
+					return data;
 				} else {
 					if (localStorage.getItem(cityName)) {
 						const currentDateTime = new Date().getTime();
@@ -40,7 +40,7 @@ const cityReports = {
 	mutations: {
 		setCityReport(state, cityReport) {
 			const data = (state.cities).filter((value) => {
-				return value.name.toLowerCase() !== cityReport.name;
+				return value.name.toLowerCase() !== (cityReport.name).toLowerCase();
 			});
 			const date = new Date();
 			const Jdata = { data: cityReport, time: date };
@@ -49,7 +49,24 @@ const cityReports = {
 			localStorage.setItem(cityReport.name.toLowerCase(), dString);
 			data.push(cityReport);
 			state.cities = data;
+			const cityNameExists = (state.cityNames).find((value) => {
+				return value.toLowerCase() === cityReport.name.toLowerCase();
+			});
+			if (cityNameExists === undefined) {
+				state.cityNames.push(cityReport.name.toLowerCase());
+			}
+			
 		},
+		removeCity(state, cityName){
+			const data = (state.cities).filter((value) => {
+				return value.name.toLowerCase() !== cityName.toLowerCase();
+			});
+			state.cities = data;
+			const names = (state.cityNames).filter((value) => {
+				return value.toLowerCase() !== cityName.toLowerCase();
+			});
+			state.cityNames = names;
+		}
 	},
 	actions: {
 		getCityReport(context, cityName) {

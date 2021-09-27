@@ -23,6 +23,7 @@ const router = new VueRouter({
 			}
 		},
 		{
+			name: "CityReport",
 			path: "/:city",
 			component: CityReport,
             meta: {
