@@ -1,7 +1,15 @@
 <template>
 	<div>
-		<city-input v-on:addCityToList="addCityToCityList" />
-		<cities-list :cityNames="cityNames" />
+		<div class="loading" v-if="status === 'LOADING'">
+			<p>Getting weather report for your city</p>
+		</div>
+		<div v-if="status == 'ERROR'" class="loading">
+			{{ error }}
+		</div>
+		<div v-else>
+			<city-input v-on:addCityToList="addCityToCityList" />
+			<cities-list :cityNames="cityNames" />
+		</div>
 	</div>
 </template>
 
@@ -14,14 +22,15 @@
 		name: "AllCities",
 		data() {
 			return {
-				status: "LOADING"
+				status: "LOADING",
+				error: "",
 			};
 		},
 		computed: {
 			...mapState({
 				cities: (state) => state.cityReports.cities,
-				cityNames:(state) => state.cityReports.cityNames
-			})
+				cityNames: (state) => state.cityReports.cityNames,
+			}),
 		},
 		methods: {
 			async getWeather() {
@@ -36,12 +45,14 @@
 						})
 					);
 				} catch (error) {
+					this.status == "ERROR";
+					this.error = error.message;
 					console.log(error.message);
 				}
 			},
 			async addCityToCityList(cityName) {
 				this.status = "LOADING";
-				const isAdded = (this.cityNames).indexOf(cityName.toLowerCase());
+				const isAdded = this.cityNames.indexOf(cityName.toLowerCase());
 				if (isAdded === -1) {
 					this.cityNames.push(cityName.toLowerCase());
 					await this.getWeather();
@@ -53,11 +64,14 @@
 			CitiesList,
 			CityInput,
 		},
-		async created() {
+		created() {
 			this.status = "LOADED";
 		},
 	};
 </script>
 
-<style>
+<style scoped>
+	.loading {
+		text-align: center;
+	}
 </style>

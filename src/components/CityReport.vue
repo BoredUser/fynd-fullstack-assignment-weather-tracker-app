@@ -1,29 +1,41 @@
 <template>
 	<div class="weather-container">
-		<div class="weather" :style="[getBackgroundColor(city.weather[0].id)]">
-			<h2>{{ city.name }}</h2>
-			<hr />
-			<p>
-				Date : {{ getDate(city.dt) }}
-				<br />
-				Wind direction is {{ city.wind.deg }} deg.
-				<br />
-				Wind speed is {{ city.wind.speed }} km/hr
-				<br />
-				Cloudiness is {{ city.clouds.all }}
-				<br />
-				Pressure is {{ city.main.pressure }}hPa
-				<br />
-				Humidity is {{ city.main.humidity }}%
-				<br />
-				Cooridinates : {{ city.coord.lat }}°N, {{ city.coord.lon }}°E
-				<br />
-				Sunrise time :
-				{{ new Date(city.sys.sunrise * 1000).toUTCString() }}
-				<br />
-				Sunset time :
-				{{ new Date(city.sys.sunset * 1000).toUTCString() }}
-			</p>
+		<div class="loading" v-if="status === 'LOADING'">
+			<p>Getting weather report for your city</p>
+		</div>
+		<div v-if="status == 'ERROR'" class="loading">
+			{{ error }}
+		</div>
+		<div v-else>
+			<div
+				class="weather"
+				:style="[getBackgroundColor(city.weather[0].id)]"
+			>
+				<h2>{{ city.name }}</h2>
+				<hr />
+				<p>
+					Date : {{ getDate(city.dt) }}
+					<br />
+					Wind direction is {{ city.wind.deg }} deg.
+					<br />
+					Wind speed is {{ city.wind.speed }} km/hr
+					<br />
+					Cloudiness is {{ city.clouds.all }}
+					<br />
+					Pressure is {{ city.main.pressure }}hPa
+					<br />
+					Humidity is {{ city.main.humidity }}%
+					<br />
+					Cooridinates : {{ city.coord.lat }}°N,
+					{{ city.coord.lon }}°E
+					<br />
+					Sunrise time :
+					{{ new Date(city.sys.sunrise * 1000).toUTCString() }}
+					<br />
+					Sunset time :
+					{{ new Date(city.sys.sunset * 1000).toUTCString() }}
+				</p>
+			</div>
 		</div>
 	</div>
 </template>
@@ -35,19 +47,28 @@
 		data() {
 			return {
 				cityName: this.$route.params.city,
-        city: {}
+				city: {},
+				status: "LOADING",
+				error: "",
 			};
 		},
 		computed: {
-			...mapGetters({getCity: "cityReports/getCity"}),
+			...mapGetters({ getCity: "cityReports/getCity" }),
 		},
 		created() {
 			this.setCity();
+			this.status = "LOADED";
 		},
 		methods: {
 			setCity() {
-				this.city = this.getCity((this.cityName).toLowerCase());
-        console.log(this.city);
+				this.status = "LOADING";
+				try {
+					this.city = this.getCity(this.cityName.toLowerCase());
+				} catch (err) {
+					this.status = "ERROR";
+					this.error = err.message;
+				}
+				this.status = "LOADED";
 			},
 			getBackgroundColor(code) {
 				if (200 <= code && code <= 299) {
@@ -78,20 +99,23 @@
 			getDate(date) {
 				return new Date(date * 1000).toUTCString();
 			},
-		}
+		},
 	};
 </script>
 
 <style scoped>
-.weather-container{
-  display: flex;
+	.loading {
+		text-align: center;
+	}
+	.weather-container {
+		display: flex;
 		flex-wrap: wrap;
 		justify-content: space-around;
 		margin: 120px 2em;
-}
+	}
 
-.weather {
-        position: relative;
+	.weather {
+		position: relative;
 		border: 1px solid rgb(167, 167, 167);
 		border-radius: 5px;
 		padding: 20px;

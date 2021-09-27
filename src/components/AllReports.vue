@@ -1,21 +1,29 @@
 <template>
 	<div class="weather-list-container">
-		<div
-			v-for="city in cities"
-			:key="city.id"
-			class="weather"
-			:style="[getBackgroundColor(city.weather[0].id)]"
-			@click="cityWeatherReportDetails(city.name)"
-		>
-			<h2>{{ city.name }}</h2>
-			<p class="cross" @click.stop="removeCity(city.name)">+</p>
-			<hr />
-			<p>
-				Current Weather : {{ city.weather[0].main }}
-				<br />
-				Date : {{ getDate(city.dt) }}
-				<br />
-			</p>
+		<div class="loading" v-if="status === 'LOADING'">
+			<p>Getting weather report for your cities</p>
+		</div>
+		<div v-if="status == 'ERROR'" class="loading">
+			{{ error }}
+		</div>
+		<div v-else>
+			<div
+				v-for="city in cities"
+				:key="city.id"
+				class="weather"
+				:style="[getBackgroundColor(city.weather[0].id)]"
+				@click="cityWeatherReportDetails(city.name)"
+			>
+				<h2>{{ city.name }}</h2>
+				<p class="cross" @click.stop="removeCity(city.name)">+</p>
+				<hr />
+				<p>
+					Current Weather : {{ city.weather[0].main }}
+					<br />
+					Date : {{ getDate(city.dt) }}
+					<br />
+				</p>
+			</div>
 		</div>
 	</div>
 </template>
@@ -26,18 +34,33 @@
 	export default {
 		name: "AllReports",
 		router,
+		data() {
+			return {
+				status: "LOADING",
+				error: "",
+			};
+		},
 		computed: {
 			...mapState({
 				cities: (state) => state.cityReports.cities,
 			}),
 		},
 		methods: {
-			...mapMutations( {removeCityFromStore: "cityReports/removeCity"} ),
-			cityWeatherReportDetails(cityName){
-				this.$router.push({ name: "CityReport", params: { city: cityName } });
+			...mapMutations({ removeCityFromStore: "cityReports/removeCity" }),
+			cityWeatherReportDetails(cityName) {
+				this.$router.push({
+					name: "CityReport",
+					params: { city: cityName },
+				});
 			},
 			removeCity(cityName) {
-				this.removeCityFromStore(cityName);
+				this.status = "LOADING";
+				try {
+					this.removeCityFromStore(cityName);
+				} catch (err) {
+					this.status = "ERROR";
+					this.error = err.message;
+				}
 			},
 			getBackgroundColor(code) {
 				if (200 <= code && code <= 299) {
@@ -69,10 +92,17 @@
 				return new Date(date * 1000).toUTCString();
 			},
 		},
+		created() {
+			this.status = "LOADED";
+		},
 	};
 </script>
 
 <style scoped>
+	.loading {
+		text-align: center;
+	}
+
 	.weather-list-container {
 		display: flex;
 		flex-wrap: wrap;
@@ -81,7 +111,7 @@
 	}
 
 	.weather {
-        position: relative;
+		position: relative;
 		border: 1px solid rgb(167, 167, 167);
 		border-radius: 5px;
 		padding: 20px;
