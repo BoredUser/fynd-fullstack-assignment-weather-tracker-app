@@ -61,6 +61,7 @@
 					this.status = "ERROR";
 					this.error = err.message;
 				}
+				this.status = "LOADED";
 			},
 			getBackgroundColor(code) {
 				if (200 <= code && code <= 299) {
