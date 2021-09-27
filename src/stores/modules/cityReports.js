@@ -5,12 +5,12 @@ const cityReports = {
 	state: {
 		token: "414c24b0ec0278856f10e110f3cdf2ae",
 		cities: [],
-		cityNames : []
+		cityNames: [],
 	},
 	getters: {
 		getCity(state) {
 			return (cityName) => {
-				const data = (state.cities).find((value) => {
+				const data = state.cities.find((value) => {
 					return value.name.toLowerCase() === cityName;
 				});
 				if (data !== undefined) {
@@ -22,7 +22,9 @@ const cityReports = {
 
 						const cityJData = JSON.parse(cityData);
 
-						const storageDateTime = new Date(cityJData.time).getTime();
+						const storageDateTime = new Date(
+							cityJData.time
+						).getTime();
 
 						if (currentDateTime - storageDateTime >= 900000) {
 							return false;
@@ -30,7 +32,6 @@ const cityReports = {
 							return cityJData.data;
 						}
 					} else {
-						
 						return false;
 					}
 				}
@@ -39,8 +40,10 @@ const cityReports = {
 	},
 	mutations: {
 		setCityReport(state, cityReport) {
-			const data = (state.cities).filter((value) => {
-				return value.name.toLowerCase() !== (cityReport.name).toLowerCase();
+			const data = state.cities.filter((value) => {
+				return (
+					value.name.toLowerCase() !== cityReport.name.toLowerCase()
+				);
 			});
 			const date = new Date();
 			const Jdata = { data: cityReport, time: date };
@@ -49,39 +52,46 @@ const cityReports = {
 			localStorage.setItem(cityReport.name.toLowerCase(), dString);
 			data.push(cityReport);
 			state.cities = data;
-			const cityNameExists = (state.cityNames).find((value) => {
+			const cityNameExists = state.cityNames.find((value) => {
 				return value.toLowerCase() === cityReport.name.toLowerCase();
 			});
 			if (cityNameExists === undefined) {
 				state.cityNames.push(cityReport.name.toLowerCase());
 			}
-			
 		},
-		removeCity(state, cityName){
-			const data = (state.cities).filter((value) => {
+		removeCity(state, cityName) {
+			const data = state.cities.filter((value) => {
 				return value.name.toLowerCase() !== cityName.toLowerCase();
 			});
 			state.cities = data;
-			const names = (state.cityNames).filter((value) => {
+			const names = state.cityNames.filter((value) => {
+				return value.toLowerCase() !== cityName.toLowerCase();
+			});
+			state.cityNames = names;
+		},
+		removeCityname(state, cityName){
+			const names = state.cityNames.filter((value) => {
 				return value.toLowerCase() !== cityName.toLowerCase();
 			});
 			state.cityNames = names;
 		}
 	},
 	actions: {
-		getCityReport(context, cityName) {
+		async getCityReport(context, cityName) {
 			cityName = cityName.toLowerCase();
 			const cityReport = context.getters.getCity(cityName);
 			if (cityReport === false) {
-				s_getCityReport(
-					cityName,
-					context.state.token
-				).then((data) => {
+				try {
+					const data = await s_getCityReport(
+						cityName,
+						context.state.token
+					);
 					context.commit("setCityReport", data);
-				});
-				
-			}
-			else{
+				} catch (err) {
+					console.log(err.message);
+					context.commit("removeCityname", cityName);
+				}
+			} else {
 				context.commit("setCityReport", cityReport);
 			}
 		},
